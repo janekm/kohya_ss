@@ -2069,7 +2069,7 @@ def train(args):
           out_dir = os.path.join(args.output_dir, EPOCH_DIFFUSERS_DIR_NAME.format(epoch + 1))
           os.makedirs(out_dir, exist_ok=True)
           save_diffusers_checkpoint(args.v2, out_dir, accelerator.unwrap_model(text_encoder,keep_fp32_wrapper=True), accelerator.unwrap_model(unet,keep_fp32_wrapper=True),
-                                    accelerator.unwrap_model(unet, keep_fp32_wrapper=True), args.pretrained_model_name_or_path, save_dtype)
+                                    args.pretrained_model_name_or_path, save_dtype)
 
         if args.save_state:
           print("saving state.")
