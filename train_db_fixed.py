@@ -1587,7 +1587,7 @@ except ImportError:
 def gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, pretrained_model_name_or_path):
   _scheduler = DDIMScheduler.from_pretrained(pretrained_model_name_or_path, subfolder="scheduler")
   pipeline = StableDiffusionPipeline(
-      unet=accelerator.unwrap_model(unet),
+      unet=unet,
       text_encoder=text_encoder,
       vae=vae,
       scheduler=_scheduler,
