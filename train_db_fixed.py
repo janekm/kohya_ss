@@ -1836,7 +1836,8 @@ def train(args):
     vae.eval()
     with torch.no_grad():
       train_dataset.make_buckets_with_caching(args.enable_bucket, vae, args.min_bucket_reso, args.max_bucket_reso)
-    del vae
+    if not args.log_images_every_n_epochs:
+      del vae
     if torch.cuda.is_available():
       torch.cuda.empty_cache()
   else:
