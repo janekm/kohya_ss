@@ -1576,7 +1576,6 @@ prompts = [
   ("concept art painting of lando alina as a victorian steampunk pirate by Jean-Louis-Ernest Meissonier","fat, overweight, fugly, frumpy, frequency separation, ugly, blurry, blurred detail, poor hands, poor face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration",704,832,2766802109),
   ("portrait of lando alina, beautiful, gorgeous, masterpiece, high quality, perfect, bokeh blur, cinematic, 105mm f2.4","cg society, ugly, blurry, blurred detail, poorly drawn hands, poorly drawn face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration, oversaturated",704,832,2766802109),
   ("portrait of chloe moretz, beautiful, gorgeous, masterpiece, high quality, perfect, bokeh blur, cinematic, 105mm f2.4","cg society, ugly, blurry, blurred detail, poorly drawn hands, poorly drawn face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration, oversaturated",704,832,2766802109),
-  ("a group of chinese supermodels wearing bikinis, masterpiece photo, canon 5d mkiii, 24mm f4","fat, overweight, fugly, frumpy, frequency separation, ugly, blurry, blurred detail, poor hands, poor face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration",832,704,2766802117),
 ]
 
 try:
@@ -1599,6 +1598,7 @@ def gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, pretraine
   pipeline = pipeline.to(accelerator.device)
   g_cuda = torch.Generator(device=accelerator.device).manual_seed(args.seed)
   with torch.autocast("cuda"), torch.inference_mode():
+    images = []
     for (pos_prompt,neg_prompt,x_res,y_res,seed) in prompts:
       torch.manual_seed(seed)
       image_array = pipeline(
@@ -1610,8 +1610,8 @@ def gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, pretraine
         num_inference_steps=20,
         generator=g_cuda
         ).images
-      wandb_imgs = [wandb.Image(img, caption=f"{pos_prompt} | {neg_prompt}") for img in image_array]
-      accelerator.log({f"Sample images": wandb_imgs})
+      images.append([wandb.Image(img, caption=f"{pos_prompt} | {neg_prompt}") for img in image_array])
+    accelerator.log({f"Sample images": images})
 
   
 
