@@ -28,7 +28,7 @@ from accelerate import Accelerator
 from accelerate.utils import set_seed
 from transformers import CLIPTextModel, CLIPTokenizer, CLIPTextConfig
 import diffusers
-from diffusers import AutoencoderKL, DDPMScheduler, DDIMScheduler, StableDiffusionPipeline, UNet2DConditionModel
+from diffusers import AutoencoderKL, DDPMScheduler, DDIMScheduler, DPMSolverMultistepScheduler, StableDiffusionPipeline, UNet2DConditionModel
 import albumentations as albu
 import numpy as np
 from PIL import Image
@@ -1567,6 +1567,49 @@ def save_stable_diffusion_checkpoint(v2, output_file, text_encoder, unet, ckpt_p
   torch.save(new_ckpt, output_file)
 
 
+prompts = [
+  ("lando alina","",704,832,2766802111),
+  ("lando alina","",768,768,2766802114),
+  ("lando alina as wonderwoman","",704,832,2766802114),
+  ("concept art painting of lando alina as wonderwoman by wlop","",704,832,2766802114),
+  ("concept art painting of lando alina as wonderwoman by wlop","fat, overweight, fugly, frumpy, frequency separation, ugly, blurry, blurred detail, poor hands, poor face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration",704,832,2766802115),
+  ("concept art painting of lando alina as a victorian steampunk pirate by Jean-Louis-Ernest Meissonier","fat, overweight, fugly, frumpy, frequency separation, ugly, blurry, blurred detail, poor hands, poor face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration",704,832,2766802109),
+  ("portrait of lando alina, beautiful, gorgeous, masterpiece, high quality, perfect, bokeh blur, cinematic, 105mm f2.4","cg society, ugly, blurry, blurred detail, poorly drawn hands, poorly drawn face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration, oversaturated",704,832,2766802109),
+  ("portrait of chloe moretz, beautiful, gorgeous, masterpiece, high quality, perfect, bokeh blur, cinematic, 105mm f2.4","cg society, ugly, blurry, blurred detail, poorly drawn hands, poorly drawn face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration, oversaturated",704,832,2766802109),
+  ("a group of chinese supermodels wearing bikinis, masterpiece photo, canon 5d mkiii, 24mm f4","fat, overweight, fugly, frumpy, frequency separation, ugly, blurry, blurred detail, poor hands, poor face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration",832,704,2766802117),
+]
+
+try:
+  import wandb
+except ImportError:
+  pass
+
+def gen_sample_images(text_encoder, unet, pretrained_model_name_or_path):
+  scheduler = DPMSolverMultistepScheduler.from_pretrained(pretrained_model_name_or_path, subfolder="scheduler")
+  pipeline = StableDiffusionPipeline(
+      unet=unet,
+      text_encoder=text_encoder,
+      vae=AutoencoderKL.from_pretrained(pretrained_model_name_or_path, subfolder="vae"),
+      scheduler=DDIMScheduler.from_pretrained(pretrained_model_name_or_path, subfolder="scheduler"),
+      tokenizer=CLIPTokenizer.from_pretrained(pretrained_model_name_or_path, subfolder="tokenizer"),
+      safety_checker=None,
+      feature_extractor=None,
+      requires_safety_checker=None,
+      scheduler=scheduler
+  )
+  for (prompt,neg_prompt,x_res,y_res,seed) in prompts:
+    torch.manual_seed(seed)
+    images = pipeline(
+      prompt=prompt,
+      negative_prompt=neg_prompt,
+      width=x_res,
+      height=y_res,
+      num_images_per_prompt=1
+      ).images
+    wandb.log(f"prompt{prompt}", images)
+
+  
+
 def save_diffusers_checkpoint(v2, output_dir, text_encoder, unet, pretrained_model_name_or_path, save_dtype):
   pipeline = StableDiffusionPipeline(
       unet=unet,
@@ -1748,8 +1791,16 @@ def train(args):
   else:
     log_with = "tensorboard"
     logging_dir = args.logging_dir + "/" + time.strftime('%Y%m%d%H%M%S', time.localtime())
+  log_with = "wandb" if args.wandb else log_with
+  logging_dir = None if args.wandb else logging_dir
+  if args.wandb is not None:
+    log_with = "wandb"
+    logging_dir = None
   accelerator = Accelerator(gradient_accumulation_steps=1, mixed_precision=args.mixed_precision,
                             log_with=log_with, logging_dir=logging_dir)
+  if args.wandb is not None:
+    accelerator.init_trackers("my_projectname")
+    wandb.watch()
 
   # mixed precisionに対応した型を用意しておき適宜castする
   weight_dtype = torch.float32
@@ -1993,6 +2044,9 @@ def train(args):
       accelerator.log(logs, step=epoch+1)
 
     accelerator.wait_for_everyone()
+    if args.log_images_every_n_epochs is not None:
+      if (epoch+1) % args.log_images_every_n_epochs == 0:
+        gen_sample_images(text_encoder, unet, args.pretrained_model_name_or_path)
 
     if args.save_every_n_epochs is not None:
       if (epoch + 1) % args.save_every_n_epochs == 0 and (epoch + 1) < num_train_epochs:
@@ -2115,6 +2169,9 @@ if __name__ == '__main__':
                       help="scheduler to use for learning rate / 学習率のスケジューラ: linear, cosine, cosine_with_restarts, polynomial, constant (default), constant_with_warmup")
   parser.add_argument("--lr_warmup_steps", type=int, default=0,
                       help="Number of steps for the warmup in the lr scheduler (default is 0) / 学習率のスケジューラをウォームアップするステップ数（デフォルト0）")
+  parser.add_argument("--wandb_project_name", type=str, default=None, help="wandb project name / wandbのプロジェクト名")
+  parser.add_argument("--log_images_every_n_epochs", type=int, default=1,help="log images every n epochs / n epoch毎に画像をログ出力する")
+
 
   args = parser.parse_args()
   train(args)
