@@ -1790,15 +1790,13 @@ def train(args):
   else:
     log_with = "tensorboard"
     logging_dir = args.logging_dir + "/" + time.strftime('%Y%m%d%H%M%S', time.localtime())
-  log_with = "wandb" if args.wandb else log_with
-  logging_dir = None if args.wandb else logging_dir
-  if args.wandb is not None:
+  if args.wandb_project_name is not None:
     log_with = "wandb"
     logging_dir = None
   accelerator = Accelerator(gradient_accumulation_steps=1, mixed_precision=args.mixed_precision,
                             log_with=log_with, logging_dir=logging_dir)
-  if args.wandb is not None:
-    accelerator.init_trackers("my_projectname")
+  if args.wandb_project_name is not None:
+    accelerator.init_trackers(args.wandb_project_name)
     wandb.watch()
 
   # mixed precisionに対応した型を用意しておき適宜castする
