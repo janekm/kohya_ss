@@ -1597,16 +1597,16 @@ def gen_sample_images(text_encoder, unet, pretrained_model_name_or_path):
       requires_safety_checker=None,
       scheduler=scheduler
   )
-  for (prompt,neg_prompt,x_res,y_res,seed) in prompts:
+  for (pos_prompt,neg_prompt,x_res,y_res,seed) in prompts:
     torch.manual_seed(seed)
     images = pipeline(
-      prompt=prompt,
+      prompt=pos_prompt,
       negative_prompt=neg_prompt,
       width=x_res,
       height=y_res,
       num_images_per_prompt=1
       ).images
-    wandb.log(f"prompt{prompt}", images)
+    wandb.log(f"prompt{pos_prompt}", images)
 
   
 
