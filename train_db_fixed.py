@@ -1840,7 +1840,7 @@ def train(args):
   replace_unet_modules(unet, args.mem_eff_attn, args.xformers)
 
   # gen pre-run samples / 事前にサンプルを生成しておく
-  if args.log_images_every_n_samples is not None:
+  if args.log_images_every_n_epochs is not None:
     gen_sample_images(accelerator, accelerator.unwrap_model(text_encoder,keep_fp32_wrapper=True), accelerator.unwrap_model(unet,keep_fp32_wrapper=True),
                               vae, tokenizer, args.log_image_base_checkpoint)
 
