@@ -1610,7 +1610,7 @@ def gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, pretraine
         num_inference_steps=20,
         generator=g_cuda
         ).images
-      images.append([wandb.Image(img, caption=f"{pos_prompt} | {neg_prompt}") for img in image_array])
+      images = images + [wandb.Image(img, caption=f"{pos_prompt} | {neg_prompt}") for img in image_array]
     accelerator.log({f"Sample images": images})
 
   
