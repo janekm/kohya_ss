@@ -1584,7 +1584,7 @@ try:
 except ImportError:
   pass
 
-def gen_sample_images(text_encoder, unet, pretrained_model_name_or_path):
+def gen_sample_images(accelerator, text_encoder, unet, pretrained_model_name_or_path):
   _scheduler = DPMSolverMultistepScheduler.from_pretrained(pretrained_model_name_or_path, subfolder="scheduler")
   pipeline = StableDiffusionPipeline(
       unet=unet,
@@ -1605,7 +1605,7 @@ def gen_sample_images(text_encoder, unet, pretrained_model_name_or_path):
       height=y_res,
       num_images_per_prompt=1
       ).images
-    wandb.log(f"prompt{pos_prompt}", images)
+    accelerator.log(f"prompt{pos_prompt}", images)
 
   
 
@@ -1797,7 +1797,6 @@ def train(args):
                             log_with=log_with, logging_dir=logging_dir)
   if args.wandb_project_name is not None:
     accelerator.init_trackers(args.wandb_project_name)
-    wandb.watch()
 
   # mixed precisionに対応した型を用意しておき適宜castする
   weight_dtype = torch.float32
@@ -2043,7 +2042,7 @@ def train(args):
     accelerator.wait_for_everyone()
     if args.log_images_every_n_epochs is not None:
       if (epoch+1) % args.log_images_every_n_epochs == 0:
-        gen_sample_images(text_encoder, unet, args.pretrained_model_name_or_path)
+        gen_sample_images(accelerator, text_encoder, unet, args.pretrained_model_name_or_path)
 
     if args.save_every_n_epochs is not None:
       if (epoch + 1) % args.save_every_n_epochs == 0 and (epoch + 1) < num_train_epochs:
