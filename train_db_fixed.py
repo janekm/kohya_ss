@@ -1841,7 +1841,7 @@ def train(args):
 
   # gen pre-run samples / 事前にサンプルを生成しておく
   gen_sample_images(accelerator, accelerator.unwrap_model(text_encoder,keep_fp32_wrapper=True), accelerator.unwrap_model(unet,keep_fp32_wrapper=True),
-                              accelerator.unwrap_model(unet, keep_fp32_wrapper=True), vae, tokenizer, args.log_image_base_checkpoint)
+                              vae, tokenizer, args.log_image_base_checkpoint)
 
 
   # 学習を準備する
@@ -2077,7 +2077,7 @@ def train(args):
     if args.log_images_every_n_epochs is not None:
       if (epoch+1) % args.log_images_every_n_epochs == 0:
         gen_sample_images(accelerator, accelerator.unwrap_model(text_encoder,keep_fp32_wrapper=True), accelerator.unwrap_model(unet,keep_fp32_wrapper=True),
-                                    accelerator.unwrap_model(unet, keep_fp32_wrapper=True), vae, tokenizer, args.log_image_base_checkpoint)
+                                    vae, tokenizer, args.log_image_base_checkpoint)
 
     unet.bias.to(accelerator.device)
   is_main_process = accelerator.is_main_process
