@@ -1584,14 +1584,14 @@ try:
 except ImportError:
   pass
 
-def gen_sample_images(accelerator, text_encoder, unet, pretrained_model_name_or_path):
+def gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, pretrained_model_name_or_path):
   _scheduler = DPMSolverMultistepScheduler.from_pretrained(pretrained_model_name_or_path, subfolder="scheduler")
   pipeline = StableDiffusionPipeline(
       unet=unet,
       text_encoder=text_encoder,
-      vae=AutoencoderKL.from_pretrained(pretrained_model_name_or_path, subfolder="vae").to(accelerator.device, dtype="float"),
+      vae=vae,
       scheduler=_scheduler,
-      tokenizer=CLIPTokenizer.from_pretrained(pretrained_model_name_or_path, subfolder="tokenizer").to(accelerator.device, dtype="float"),
+      tokenizer=tokenizer,
       safety_checker=None,
       feature_extractor=None,
       requires_safety_checker=None
@@ -1918,7 +1918,7 @@ def train(args):
                                   num_train_timesteps=1000, clip_sample=False)
 
   # gen pre-run samples / 事前にサンプルを生成しておく
-  gen_sample_images(accelerator, text_encoder, unet, args.log_image_base_checkpoint)
+  gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, args.log_image_base_checkpoint)
   if accelerator.is_main_process:
     accelerator.init_trackers("dreambooth")
 
@@ -2044,7 +2044,7 @@ def train(args):
     accelerator.wait_for_everyone()
     if args.log_images_every_n_epochs is not None:
       if (epoch+1) % args.log_images_every_n_epochs == 0:
-        gen_sample_images(accelerator, text_encoder, unet, args.log_image_base_checkpoint)
+        gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, args.log_image_base_checkpoint)
 
     if args.save_every_n_epochs is not None:
       if (epoch + 1) % args.save_every_n_epochs == 0 and (epoch + 1) < num_train_epochs:
