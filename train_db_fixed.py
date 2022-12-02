@@ -2169,7 +2169,7 @@ if __name__ == '__main__':
                       help="Number of steps for the warmup in the lr scheduler (default is 0) / 学習率のスケジューラをウォームアップするステップ数（デフォルト0）")
   parser.add_argument("--wandb_project_name", type=str, default=None, help="wandb project name / wandbのプロジェクト名")
   parser.add_argument("--log_images_every_n_epochs", type=int, default=None,help="log images every n epochs / n epoch毎に画像をログ出力する")
-  parser.add_argument("--log_image_base_checkpoint", type=int, default=None,help="base diffusers checkpoint for image logging / 画像ログ出力用のdiffusers checkpointのベース")
+  parser.add_argument("--log_image_base_checkpoint", type=str, default=None,help="base diffusers checkpoint for image logging / 画像ログ出力用のdiffusers checkpointのベース")
 
 
   args = parser.parse_args()
