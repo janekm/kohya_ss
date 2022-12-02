@@ -1597,16 +1597,18 @@ def gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, pretraine
       feature_extractor=None,
       requires_safety_checker=None
   )
-  for (pos_prompt,neg_prompt,x_res,y_res,seed) in prompts:
-    torch.manual_seed(seed)
-    images = pipeline(
-      prompt=pos_prompt,
-      negative_prompt=neg_prompt,
-      width=x_res,
-      height=y_res,
-      num_images_per_prompt=1
-      ).images
-    accelerator.log(f"prompt{pos_prompt}", images)
+  with torch.no_grad():
+    for (pos_prompt,neg_prompt,x_res,y_res,seed) in prompts:
+      torch.manual_seed(seed)
+      images = pipeline(
+        prompt=pos_prompt,
+        negative_prompt=neg_prompt,
+        width=x_res,
+        height=y_res,
+        num_images_per_prompt=1,
+        num_inference_steps=20
+        ).images
+      accelerator.log(f"prompt{pos_prompt}", images)
 
   
 
