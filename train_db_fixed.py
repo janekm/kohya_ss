@@ -1829,6 +1829,10 @@ def train(args):
   # モデルに xformers とか memory efficient attention を組み込む
   replace_unet_modules(unet, args.mem_eff_attn, args.xformers)
 
+  # gen pre-run samples / 事前にサンプルを生成しておく
+  gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, args.log_image_base_checkpoint)
+
+
   # 学習を準備する
   if cache_latents:
     vae.to(accelerator.device, dtype=weight_dtype)
@@ -1918,8 +1922,6 @@ def train(args):
   noise_scheduler = DDPMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear",
                                   num_train_timesteps=1000, clip_sample=False)
 
-  # gen pre-run samples / 事前にサンプルを生成しておく
-  gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, args.log_image_base_checkpoint)
   if accelerator.is_main_process:
     accelerator.init_trackers("dreambooth")
 
