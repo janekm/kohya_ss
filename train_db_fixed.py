@@ -1585,6 +1585,7 @@ except ImportError:
   pass
 
 def gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, pretrained_model_name_or_path):
+  _scheduler = DDIMScheduler.from_pretrained(pretrained_model_name_or_path, subfolder="scheduler")
   unet.set_use_memory_efficient_attention_xformers(False)
   unet.requires_grad_(False) 
   unet.eval()                  # 念のため追加
@@ -1594,6 +1595,7 @@ def gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, pretraine
       unet=unet,
       text_encoder=text_encoder,
       vae=vae,
+      scheduler=_scheduler,
       tokenizer=tokenizer,
       safety_checker=None,
       feature_extractor=None,
