@@ -1528,8 +1528,9 @@ def convert_text_encoder_state_dict_to_sd_v2(checkpoint):
   return new_sd
 
 
-def save_stable_diffusion_checkpoint(v2, output_file, text_encoder, unet, ckpt_path, epochs, steps, save_dtype=None):
+def save_stable_diffusion_checkpoint(accelerator, v2, output_file, text_encoder, unet, ckpt_path, epochs, steps, save_dtype=None):
   # VAEがメモリ上にないので、もう一度VAEを含めて読み込む
+  unet = accelerator.unwrap_model(unet)
   checkpoint = load_checkpoint_with_text_encoder_conversion(ckpt_path)
   state_dict = checkpoint["state_dict"]
 
@@ -2061,7 +2062,7 @@ def train(args):
         if use_stable_diffusion_format:
           os.makedirs(args.output_dir, exist_ok=True)
           ckpt_file = os.path.join(args.output_dir, EPOCH_CHECKPOINT_NAME.format(epoch + 1))
-          save_stable_diffusion_checkpoint(args.v2, ckpt_file, accelerator.unwrap_model(text_encoder), accelerator.unwrap_model(unet),
+          save_stable_diffusion_checkpoint(accelerator, args.v2, ckpt_file, accelerator.unwrap_model(text_encoder), accelerator.unwrap_model(unet),
                                            args.pretrained_model_name_or_path, epoch + 1, global_step, save_dtype)
         else:
           out_dir = os.path.join(args.output_dir, EPOCH_DIFFUSERS_DIR_NAME.format(epoch + 1))
@@ -2075,7 +2076,6 @@ def train(args):
     if args.log_images_every_n_epochs is not None:
       if (epoch+1) % args.log_images_every_n_epochs == 0:
         gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, args.log_image_base_checkpoint)
-    unet.to(accelerator.device)
   is_main_process = accelerator.is_main_process
   if is_main_process:
     unet = accelerator.unwrap_model(unet)
@@ -2094,7 +2094,7 @@ def train(args):
     if use_stable_diffusion_format:
       ckpt_file = os.path.join(args.output_dir, LAST_CHECKPOINT_NAME)
       print(f"save trained model as StableDiffusion checkpoint to {ckpt_file}")
-      save_stable_diffusion_checkpoint(args.v2, ckpt_file, text_encoder, unet,
+      save_stable_diffusion_checkpoint(accelerator, args.v2, ckpt_file, text_encoder, unet,
                                        args.pretrained_model_name_or_path, epoch, global_step, save_dtype)
     else:
       # Create the pipeline using using the trained modules and save it.
