@@ -1589,9 +1589,9 @@ def gen_sample_images(accelerator, text_encoder, unet, pretrained_model_name_or_
   pipeline = StableDiffusionPipeline(
       unet=unet,
       text_encoder=text_encoder,
-      vae=AutoencoderKL.from_pretrained(pretrained_model_name_or_path, subfolder="vae"),
+      vae=AutoencoderKL.from_pretrained(pretrained_model_name_or_path, subfolder="vae").to(accelerator.device, dtype="float"),
       scheduler=_scheduler,
-      tokenizer=CLIPTokenizer.from_pretrained(pretrained_model_name_or_path, subfolder="tokenizer"),
+      tokenizer=CLIPTokenizer.from_pretrained(pretrained_model_name_or_path, subfolder="tokenizer").to(accelerator.device, dtype="float"),
       safety_checker=None,
       feature_extractor=None,
       requires_safety_checker=None
