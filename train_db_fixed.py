@@ -1586,7 +1586,7 @@ except ImportError:
 def gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, pretrained_model_name_or_path):
   _scheduler = DDIMScheduler.from_pretrained(pretrained_model_name_or_path, subfolder="scheduler")
   pipeline = StableDiffusionPipeline(
-      unet=unet,
+      unet=accelerator.unwrap_model(unet),
       text_encoder=text_encoder,
       vae=vae,
       scheduler=_scheduler,
@@ -1612,6 +1612,9 @@ def gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, pretraine
         ).images
       images = images + [wandb.Image(img, caption=f"{pos_prompt} | {neg_prompt}") for img in image_array]
     accelerator.log({f"Sample images": images})
+    del pipeline
+    if torch.cuda.is_available():
+      torch.cuda.empty_cache()
 
   
 
@@ -2072,7 +2075,7 @@ def train(args):
     if args.log_images_every_n_epochs is not None:
       if (epoch+1) % args.log_images_every_n_epochs == 0:
         gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, args.log_image_base_checkpoint)
-    unet.to(accelerator.device)
+    # unet.to(accelerator.device)
   is_main_process = accelerator.is_main_process
   if is_main_process:
     unet = accelerator.unwrap_model(unet)
