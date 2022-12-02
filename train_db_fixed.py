@@ -1570,12 +1570,12 @@ def save_stable_diffusion_checkpoint(v2, output_file, text_encoder, unet, ckpt_p
 prompts = [
   ("lando alina","",704,832,2766802111),
   ("lando alina","",768,768,2766802114),
-  ("lando alina as wonderwoman","",704,832,2766802114),
-  ("concept art painting of lando alina as wonderwoman by wlop","",704,832,2766802114),
-  ("concept art painting of lando alina as wonderwoman by wlop","fat, overweight, fugly, frumpy, frequency separation, ugly, blurry, blurred detail, poor hands, poor face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration",704,832,2766802115),
-  ("concept art painting of lando alina as a victorian steampunk pirate by Jean-Louis-Ernest Meissonier","fat, overweight, fugly, frumpy, frequency separation, ugly, blurry, blurred detail, poor hands, poor face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration",704,832,2766802109),
-  ("portrait of lando alina, beautiful, gorgeous, masterpiece, high quality, perfect, bokeh blur, cinematic, 105mm f2.4","cg society, ugly, blurry, blurred detail, poorly drawn hands, poorly drawn face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration, oversaturated",704,832,2766802109),
-  ("portrait of chloe moretz, beautiful, gorgeous, masterpiece, high quality, perfect, bokeh blur, cinematic, 105mm f2.4","cg society, ugly, blurry, blurred detail, poorly drawn hands, poorly drawn face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration, oversaturated",704,832,2766802109),
+  # ("lando alina as wonderwoman","",704,832,2766802114),
+  # ("concept art painting of lando alina as wonderwoman by wlop","",704,832,2766802114),
+  # ("concept art painting of lando alina as wonderwoman by wlop","fat, overweight, fugly, frumpy, frequency separation, ugly, blurry, blurred detail, poor hands, poor face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration",704,832,2766802115),
+  # ("concept art painting of lando alina as a victorian steampunk pirate by Jean-Louis-Ernest Meissonier","fat, overweight, fugly, frumpy, frequency separation, ugly, blurry, blurred detail, poor hands, poor face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration",704,832,2766802109),
+  # ("portrait of lando alina, beautiful, gorgeous, masterpiece, high quality, perfect, bokeh blur, cinematic, 105mm f2.4","cg society, ugly, blurry, blurred detail, poorly drawn hands, poorly drawn face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration, oversaturated",704,832,2766802109),
+  # ("portrait of chloe moretz, beautiful, gorgeous, masterpiece, high quality, perfect, bokeh blur, cinematic, 105mm f2.4","cg society, ugly, blurry, blurred detail, poorly drawn hands, poorly drawn face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration, oversaturated",704,832,2766802109),
 ]
 
 try:
@@ -2051,9 +2051,6 @@ def train(args):
       accelerator.log(logs, step=epoch+1)
 
     accelerator.wait_for_everyone()
-    if args.log_images_every_n_epochs is not None:
-      if (epoch+1) % args.log_images_every_n_epochs == 0:
-        gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, args.log_image_base_checkpoint)
 
     if args.save_every_n_epochs is not None:
       if (epoch + 1) % args.save_every_n_epochs == 0 and (epoch + 1) < num_train_epochs:
@@ -2072,7 +2069,10 @@ def train(args):
         if args.save_state:
           print("saving state.")
           accelerator.save_state(os.path.join(args.output_dir, EPOCH_STATE_NAME.format(epoch + 1)))
-
+    if args.log_images_every_n_epochs is not None:
+      if (epoch+1) % args.log_images_every_n_epochs == 0:
+        gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, args.log_image_base_checkpoint)
+    unet.to(accelerator.device, dtype=weight_dtype)
   is_main_process = accelerator.is_main_process
   if is_main_process:
     unet = accelerator.unwrap_model(unet)
