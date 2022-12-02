@@ -1571,12 +1571,12 @@ def save_stable_diffusion_checkpoint(accelerator, v2, output_file, text_encoder,
 prompts = [
   ("lando alina","",704,832,2766802111),
   ("lando alina","",768,768,2766802114),
-  # ("lando alina as wonderwoman","",704,832,2766802114),
-  # ("concept art painting of lando alina as wonderwoman by wlop","",704,832,2766802114),
-  # ("concept art painting of lando alina as wonderwoman by wlop","fat, overweight, fugly, frumpy, frequency separation, ugly, blurry, blurred detail, poor hands, poor face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration",704,832,2766802115),
-  # ("concept art painting of lando alina as a victorian steampunk pirate by Jean-Louis-Ernest Meissonier","fat, overweight, fugly, frumpy, frequency separation, ugly, blurry, blurred detail, poor hands, poor face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration",704,832,2766802109),
-  # ("portrait of lando alina, beautiful, gorgeous, masterpiece, high quality, perfect, bokeh blur, cinematic, 105mm f2.4","cg society, ugly, blurry, blurred detail, poorly drawn hands, poorly drawn face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration, oversaturated",704,832,2766802109),
-  # ("portrait of chloe moretz, beautiful, gorgeous, masterpiece, high quality, perfect, bokeh blur, cinematic, 105mm f2.4","cg society, ugly, blurry, blurred detail, poorly drawn hands, poorly drawn face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration, oversaturated",704,832,2766802109),
+  ("lando alina as wonderwoman","",704,832,2766802114),
+  ("concept art painting of lando alina as wonderwoman by wlop","",704,832,2766802114),
+  ("concept art painting of lando alina as wonderwoman by wlop","fat, overweight, fugly, frumpy, frequency separation, ugly, blurry, blurred detail, poor hands, poor face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration",704,832,2766802115),
+  ("concept art painting of lando alina as a victorian steampunk pirate by Jean-Louis-Ernest Meissonier","fat, overweight, fugly, frumpy, frequency separation, ugly, blurry, blurred detail, poor hands, poor face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration",704,832,2766802109),
+  ("portrait of lando alina, beautiful, gorgeous, masterpiece, high quality, perfect, bokeh blur, cinematic, 105mm f2.4","cg society, ugly, blurry, blurred detail, poorly drawn hands, poorly drawn face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration, oversaturated",704,832,2766802109),
+  ("portrait of chloe moretz, beautiful, gorgeous, masterpiece, high quality, perfect, bokeh blur, cinematic, 105mm f2.4","cg society, ugly, blurry, blurred detail, poorly drawn hands, poorly drawn face, enhanced hands, missing fingers, mutated hands, fused fingers, deformed, malformed limbs, disfigured, watermarked, text, extremely grainy, very chromatic aberration, oversaturated",704,832,2766802109),
 ]
 
 try:
@@ -1840,7 +1840,8 @@ def train(args):
   replace_unet_modules(unet, args.mem_eff_attn, args.xformers)
 
   # gen pre-run samples / 事前にサンプルを生成しておく
-  gen_sample_images(accelerator, accelerator.unwrap_model(text_encoder,keep_fp32_wrapper=True), accelerator.unwrap_model(unet,keep_fp32_wrapper=True),
+  if args.log_images_every_n_samples is not None:
+    gen_sample_images(accelerator, accelerator.unwrap_model(text_encoder,keep_fp32_wrapper=True), accelerator.unwrap_model(unet,keep_fp32_wrapper=True),
                               vae, tokenizer, args.log_image_base_checkpoint)
 
 
