@@ -1587,7 +1587,6 @@ except ImportError:
 def gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, pretrained_model_name_or_path):
   _scheduler = DPMSolverMultistepScheduler.from_pretrained(pretrained_model_name_or_path, subfolder="scheduler")
   unet.set_use_memory_efficient_attention_xformers(False)
-  text_encoder.set_use_memory_efficient_attention_xformers(False)
   vae.set_use_memory_efficient_attention_xformers(False)
   pipeline = StableDiffusionPipeline(
       unet=unet,
