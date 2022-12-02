@@ -2076,6 +2076,8 @@ def train(args):
     if args.log_images_every_n_epochs is not None:
       if (epoch+1) % args.log_images_every_n_epochs == 0:
         gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, args.log_image_base_checkpoint)
+
+    unet.bias.to(accelerator.device)
   is_main_process = accelerator.is_main_process
   if is_main_process:
     unet = accelerator.unwrap_model(unet)
