@@ -2079,7 +2079,6 @@ def train(args):
         gen_sample_images(accelerator, accelerator.unwrap_model(text_encoder,keep_fp32_wrapper=True), accelerator.unwrap_model(unet,keep_fp32_wrapper=True),
                                     vae, tokenizer, args.log_image_base_checkpoint)
 
-    unet.bias.to(accelerator.device)
   is_main_process = accelerator.is_main_process
   if is_main_process:
     unet = accelerator.unwrap_model(unet)
