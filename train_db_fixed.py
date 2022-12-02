@@ -1585,17 +1585,16 @@ except ImportError:
   pass
 
 def gen_sample_images(text_encoder, unet, pretrained_model_name_or_path):
-  scheduler = DPMSolverMultistepScheduler.from_pretrained(pretrained_model_name_or_path, subfolder="scheduler")
+  _scheduler = DPMSolverMultistepScheduler.from_pretrained(pretrained_model_name_or_path, subfolder="scheduler")
   pipeline = StableDiffusionPipeline(
       unet=unet,
       text_encoder=text_encoder,
       vae=AutoencoderKL.from_pretrained(pretrained_model_name_or_path, subfolder="vae"),
-      scheduler=DDIMScheduler.from_pretrained(pretrained_model_name_or_path, subfolder="scheduler"),
+      scheduler=_scheduler,
       tokenizer=CLIPTokenizer.from_pretrained(pretrained_model_name_or_path, subfolder="tokenizer"),
       safety_checker=None,
       feature_extractor=None,
-      requires_safety_checker=None,
-      scheduler=scheduler
+      requires_safety_checker=None
   )
   for (pos_prompt,neg_prompt,x_res,y_res,seed) in prompts:
     torch.manual_seed(seed)
