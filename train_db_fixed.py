@@ -1601,7 +1601,7 @@ def gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, pretraine
   with torch.autocast("cuda"), torch.inference_mode():
     for (pos_prompt,neg_prompt,x_res,y_res,seed) in prompts:
       torch.manual_seed(seed)
-      images = pipeline(
+      image_array = pipeline(
         prompt=pos_prompt,
         negative_prompt=neg_prompt,
         width=x_res,
@@ -1610,8 +1610,9 @@ def gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, pretraine
         num_inference_steps=20,
         generator=g_cuda
         ).images
-      wandb_imgs = wandb.Image(images, caption=f"{pos_prompt} | {neg_prompt}")
-      accelerator.log({f"Sample images": images})
+      images = [Image.fromarray(image) for image in image_array]
+      wandb_imgs = [wandb.Image(img, caption=f"{pos_prompt} | {neg_prompt}") for img in images]
+      accelerator.log({f"Sample images": wandb_imgs})
 
   
 
