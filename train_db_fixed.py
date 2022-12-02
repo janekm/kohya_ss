@@ -1840,7 +1840,8 @@ def train(args):
   replace_unet_modules(unet, args.mem_eff_attn, args.xformers)
 
   # gen pre-run samples / 事前にサンプルを生成しておく
-  gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, args.log_image_base_checkpoint)
+  gen_sample_images(accelerator, accelerator.unwrap_model(text_encoder,keep_fp32_wrapper=True), accelerator.unwrap_model(unet,keep_fp32_wrapper=True),
+                              accelerator.unwrap_model(unet, keep_fp32_wrapper=True), vae, tokenizer, args.log_image_base_checkpoint)
 
 
   # 学習を準備する
@@ -2062,20 +2063,21 @@ def train(args):
         if use_stable_diffusion_format:
           os.makedirs(args.output_dir, exist_ok=True)
           ckpt_file = os.path.join(args.output_dir, EPOCH_CHECKPOINT_NAME.format(epoch + 1))
-          save_stable_diffusion_checkpoint(accelerator, args.v2, ckpt_file, accelerator.unwrap_model(text_encoder), accelerator.unwrap_model(unet),
+          save_stable_diffusion_checkpoint(accelerator, args.v2, ckpt_file, accelerator.unwrap_model(text_encoder,keep_fp32_wrapper=True), accelerator.unwrap_model(unet,keep_fp32_wrapper=True),
                                            args.pretrained_model_name_or_path, epoch + 1, global_step, save_dtype)
         else:
           out_dir = os.path.join(args.output_dir, EPOCH_DIFFUSERS_DIR_NAME.format(epoch + 1))
           os.makedirs(out_dir, exist_ok=True)
-          save_diffusers_checkpoint(args.v2, out_dir, accelerator.unwrap_model(text_encoder),
-                                    accelerator.unwrap_model(unet), args.pretrained_model_name_or_path, save_dtype)
+          save_diffusers_checkpoint(args.v2, out_dir, accelerator.unwrap_model(text_encoder,keep_fp32_wrapper=True), accelerator.unwrap_model(unet,keep_fp32_wrapper=True),
+                                    accelerator.unwrap_model(unet, keep_fp32_wrapper=True), args.pretrained_model_name_or_path, save_dtype)
 
         if args.save_state:
           print("saving state.")
           accelerator.save_state(os.path.join(args.output_dir, EPOCH_STATE_NAME.format(epoch + 1)))
     if args.log_images_every_n_epochs is not None:
       if (epoch+1) % args.log_images_every_n_epochs == 0:
-        gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, args.log_image_base_checkpoint)
+        gen_sample_images(accelerator, accelerator.unwrap_model(text_encoder,keep_fp32_wrapper=True), accelerator.unwrap_model(unet,keep_fp32_wrapper=True),
+                                    accelerator.unwrap_model(unet, keep_fp32_wrapper=True), vae, tokenizer, args.log_image_base_checkpoint)
 
     unet.bias.to(accelerator.device)
   is_main_process = accelerator.is_main_process
