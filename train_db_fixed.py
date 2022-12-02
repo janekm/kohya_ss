@@ -1586,11 +1586,6 @@ except ImportError:
 
 def gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, pretrained_model_name_or_path):
   _scheduler = DDIMScheduler.from_pretrained(pretrained_model_name_or_path, subfolder="scheduler")
-  unet.set_use_memory_efficient_attention_xformers(False)
-  unet.requires_grad_(False) 
-  unet.eval()                  # 念のため追加
-  text_encoder.requires_grad_(False)
-  text_encoder.eval()
   pipeline = StableDiffusionPipeline(
       unet=unet,
       text_encoder=text_encoder,
@@ -1601,8 +1596,9 @@ def gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, pretraine
       feature_extractor=None,
       requires_safety_checker=None
   )
-
-  with torch.no_grad():
+  pipeline = pipeline.to(accelerator.device)
+  g_cuda = torch.Generator(device=accelerator.device).manual_seed(args.seed)
+  with torch.autocast("cuda"), torch.inference_mode():
     for (pos_prompt,neg_prompt,x_res,y_res,seed) in prompts:
       torch.manual_seed(seed)
       images = pipeline(
@@ -1611,13 +1607,10 @@ def gen_sample_images(accelerator, text_encoder, unet, vae, tokenizer, pretraine
         width=x_res,
         height=y_res,
         num_images_per_prompt=1,
-        num_inference_steps=20
+        num_inference_steps=20,
+        generator=g_cuda
         ).images
       accelerator.log({f"{pos_prompt} | {neg_prompt}": images})
-  unet.requires_grad_(True) 
-  unet.eval()                  # 念のため追加
-  text_encoder.requires_grad_(True)
-  text_encoder.eval()
 
   
 
