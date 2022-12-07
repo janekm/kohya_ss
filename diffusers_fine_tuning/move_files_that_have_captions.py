@@ -19,6 +19,7 @@ def main(args):
         # Check if there is a corresponding caption file in the caption directory
         caption_file = os.path.join(caption_directory, base_name + ".txt")
         if os.path.exists(caption_file):
+            print(f"moving {file} and {base_name}.txt")
             # If there is, move the file and the caption file to the output directory
             input_file = os.path.join(input_directory, file)
             output_file = os.path.join(output_directory, file)
